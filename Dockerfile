@@ -14,6 +14,8 @@ RUN curl -LO https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl && instal
 USER kubettyd
 WORKDIR /home/kubettyd
 
+RUN echo "kexec() { kubectl exec -it \$(kubectl get po -l run=\$1 -o name) -- \$2 }" >> $HOME/.bashrc
+
 EXPOSE 7681
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
