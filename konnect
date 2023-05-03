@@ -1,0 +1,28 @@
+#!/bin/bash
+set -e
+
+# first argument has to be pod or vm
+# second argument has to be pod or vm name
+# third arguemtn is expected to be a command for kubectl exec
+
+for var in "$@"
+do
+  if [[ ! $var =~ ^[a-zA-Z0-9_/=\ -]+$ ]]; then
+    # The input is invalid, exit the script with an error message
+    echo "Invalid input: $var"
+    exit 1
+  fi
+done
+
+case $1 in
+  pod)
+    kubectl exec -it $2 -- $3
+    ;;
+  vm)
+    virtctl console $2
+    ;;
+  *)
+    echo "provide pod or vm as first argument"
+    exit 1
+    ;;
+esac

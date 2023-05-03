@@ -11,8 +11,12 @@ RUN apt-get update \
 
 RUN curl -LO https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl \
     && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
-    && echo '#!/bin/bash\nkubectl exec -it $(kubectl get po -l $1 -o name) -- $2' > /usr/bin/kexec \
-    && chmod +x /usr/bin/kexec
+    && wget https://github.com/kubevirt/kubevirt/releases/download/v0.59.0/virtctl-v0.59.0-linux-amd64 \
+    && mv virtctl-v0.59.0-linux-amd64 /usr/local/bin/virtctl \
+    && chmod +x /usr/local/bin/virtctl
+
+ADD konnect /usr/local/bin/konnect
+RUN chmod +x /usr/local/bin/konnect
 
 USER kubettyd
 WORKDIR /home/kubettyd
