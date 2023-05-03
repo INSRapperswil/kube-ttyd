@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-ttyd
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: pod-exec
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-exec
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: kube-ttyd
+    namespace: default
+roleRef:
+  kind: Role
+  name: pod-exec
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kube-ttyd
+  name: kube-ttyd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-ttyd
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: kube-ttyd
+    spec:
+      serviceAccountName: kube-ttyd
+      containers:
+        - image: ghcr.io/insrapperswil/kube-ttyd:latest
+          args: ["ttyd", "-a", "konnect"]
+          name: kube-ttyd
+          ports:
+            - containerPort: 7681
+          resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kube-ttyd
+  name: kube-ttyd
+spec:
+  ports:
+    - name: ttyd
+      port: 7681
+      protocol: TCP
+      targetPort: 7681
+  selector:
+    app: kube-ttyd
+  type: ClusterIP
+---
+##########################
+# Example Ingress Objects
+##########################
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kube-ttyd-network-ninja-1
+  annotations:
+    # nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: "/?arg=pod&arg=network-ninja&arg=bash"
+spec:
+  rules:
+    - host: uuid-2.example.tld
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: kube-ttyd
+                port:
+                  name: ttyd
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kube-ttyd-network-ninja-2
+  annotations:
+    # nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: "/?arg=pod&arg=network-ninja&arg=bash"
+spec:
+  rules:
+    - host: uuid-1.example.tld
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: kube-ttyd
+                port:
+                  name: ttyd
