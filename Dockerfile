@@ -11,7 +11,7 @@ RUN apt-get update \
 
 RUN curl -LO https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl \
     && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
-    && echo -e '#!/bin/bash\nkubectl exec -it $(kubectl get po -l run=$1 -o name) -- $2' > /usr/bin/kexec \
+    && echo -e '#!/bin/bash\nkubectl exec -it $(kubectl get po -l $1 -o name) -- $2' > /usr/bin/kexec \
     && chmod +x /usr/bin/kexec
 
 USER kubettyd
